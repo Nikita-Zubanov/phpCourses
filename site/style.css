@@ -1,0 +1,19 @@
+header {
+	text-align: center;
+	font: bold 110% sans-serif;
+	color: #FFFFFF;
+	background-color: #000000;
+	margin-left: 100px;
+	margin-right: 100px;
+}
+
+#content {
+	font-family: serif;
+	margin: 100px;
+	padding: 20px;
+	border: 2px black solid;
+}
+
+button {
+	margin-top: 20px;
+}

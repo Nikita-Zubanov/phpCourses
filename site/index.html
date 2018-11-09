@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	<body>
+		<header>
+			<h1>Регистрация</h1>
+		</header>
+		<div id="content">
+			<form action="php/index.php" method="POST">
+				<p>
+					<lable>Имя:</lable>
+					<input type="text" name="name" required>
+				</p>
+				<p>
+					<lable>Фамилия:</lable>
+					<input type="text" name="surname" required>
+				</p>
+				<p>
+					<lable>Пол:</lable>
+					<select type="text" name="gender" required>
+						<option>мужчина</option>
+						<option>женщина</option>
+					</select>
+				</p>
+				<p>
+					<lable>Возраст:</lable>
+					<input type="text" name="age" required>
+				</p>
+				<p>
+					<lable>У вас есть дети?</lable>
+					<input type="radio" name="isPregnant" value="1" required>Да
+					<input type="radio" name="isPregnant" value="0" required>Нет
+				</p>
+				<p>
+					<lable>Вы учитесь?</lable>
+					<input type="radio" name="isStudent" value="1" required>Да
+					<input type="radio" name="isStudent" value="0" required>Нет
+				</p>
+				<p>
+					<lable>Ваш почтовый индекс:</lable>
+					<input type="text" name="postCode" required>
+				</p>
+				<p>
+					<button type="submit">Зарегестрироваться</button>
+				</p>
+			</form>
+		</div>
+	</body>
+</html>
