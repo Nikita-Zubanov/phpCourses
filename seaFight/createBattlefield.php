@@ -1,6 +1,6 @@
 <?php 
 
-class Battlefield 
+class CreateBattlefield 
 {
 
 	public $playerLogin = [
@@ -26,7 +26,7 @@ class Battlefield
 		return $bookshelf;
 	}
 
-	function fieldCheck($field) 
+	function getErrors($field) 
 	{
 		$ships = [
 			'singleDeck' => 0,
@@ -84,16 +84,13 @@ class Battlefield
 		return false;
 	}
 
-	function createFieldPlayer() 
+	function getFieldPlayer() 
 	{
-		$form;
+		$playerForm;
 		$coordinates = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
 
-		$form .= '<p><lable>Логин первого игрока: </lable ><input type = "text" name = "loginFirst"></p>';
-		//$this->playerLogin[$player] = $_POST["login"];
-
-		$form .= '<p><lable>Логин второго игрока: </lable ><input type = "text" name = "loginSecond"></p>';
-		//$this->playerLogin[$player] = $_POST["login"];
+		$playerForm .= '<p><lable>Логин первого игрока: </lable ><input type = "text" name = "loginFirst"></p>';
+		$playerForm .= '<p><lable>Логин второго игрока: </lable ><input type = "text" name = "loginSecond"></p>';
 
 		if (!empty($_POST['loginFirst'])) {
 			$player = '1';
@@ -102,27 +99,29 @@ class Battlefield
 		}
 
 		for ($i = 0; $i < 11; $i++) {
-			$form .= "<tr>";
-			$form .= "<th>{$i}</th>";
+			$playerForm .= "<tr>";
+			$playerForm .= "<th>{$i}</th>";
 			foreach ($coordinates as $key => $value) {
 				if ($i === 0) {
-					$form .= "<th>{$value}</th>";
+					$playerForm .= "<th>{$value}</th>";
 					$this->field[$player][$i] = $this->playerLogin[$player];
 				} else {
-					$form .= '<td><input type="checkbox" name="' . $i . $value . '" value="' . $i . $value . '"></td>';
+					$playerForm .= '<td><input type="checkbox" name="' . $i . $value . '" value="' . $i . $value . '"></td>';
 					array_push($this->field[$player][$i], $_POST[$i . $value]);
 				}
 			}
-			$form .= "</tr>";
+			$playerForm .= "</tr>";
 		}
 
-		if (!$this->fieldCheck($this->field[$player])) {
+		if (!$this->getErrors($this->field[$player])) {
 			$this->writeToFile($player);
-			//var_dump($this->readToFile($player));
 		} else {
-			$form .= $this->fieldCheck($this->field[$player]);
+			$playerForm .= $this->getErrors($this->field[$player]);
 		}
-		return $form;
+
+		$playerForm .= '
+			<p><input type="submit" name="savePlayer" value="Сохранить поле игроков"></p>';
+
+		return $playerForm;
 	}
 }
-?>
