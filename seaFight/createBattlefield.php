@@ -47,11 +47,6 @@ class CreateBattlefield
 							$this->ships['fourDeck']['location'] = array_merge($this->ships['fourDeck']['location'], $locationShip);
 							break;
 					}
-					/*echo "<br>";
-					var_dump($locationShip);
-					echo "<br>";
-					var_dump($this->ships['doubleDeck']['location']);
-					echo "<br>";*/
 				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey][$symbolKey + 1])) {
 					for ($i = $symbolKey; $i <= count($row); $i++) { //Пробегаемся по массиву по горизонтали
 						if (!empty($field[$rowKey][$i])) {
