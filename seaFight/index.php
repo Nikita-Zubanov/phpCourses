@@ -3,5 +3,5 @@
 include 'controller.php';
 $controller = new Controller;
 
-$controller->getBattlefield();
-$controller->getHtmlStartedGame();
+echo $controller->getBattlefield();
+echo $controller->getHtmlStartedGame();

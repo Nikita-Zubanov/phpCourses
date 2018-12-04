@@ -1,22 +1,25 @@
 <?php 	
 
-include 'createHtml.php';
+include 'view.php';
+include 'registration.php';
 
 class Controller
 {
-	public $createHtml;
-	function __construct()
+	private $html;
+	private $registration;
+	public function __construct()
 	{
-		$this->createHtml = new CreateHtml();
+		$this->html = new View();
+		$this->registration = new Registration();
 	}
 
-	function getBattlefield()
+	public function getBattlefield()
 	{
-		echo $this->createHtml->getHtmlRegistrationForm();
+		return $this->html->getHtmlRegistrationForm($this->registration->getFieldPlayer());
 	}
 
-	function getHtmlStartedGame()
+	public function getHtmlStartedGame()
 	{
-		echo $this->createHtml->getHtmlStartedGame();
+		return $this->html->getHtmlStartedGame();
 	}
 }
