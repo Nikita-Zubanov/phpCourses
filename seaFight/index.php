@@ -5,3 +5,4 @@ $controller = new Controller;
 
 echo $controller->getBattlefield();
 echo $controller->getHtmlStartedGame();
+

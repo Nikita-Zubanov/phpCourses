@@ -4,6 +4,7 @@ table {
 	border: 2px solid #483D8B;
 	border-collapse: collapse;
 }
+
 caption {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
 	font-weight: bold;
@@ -11,11 +12,22 @@ caption {
 	padding: 10px; 
 	color: #000000;
 }
+
 th {
 	padding: 16px; 
  	border: 2px solid #483D8B;
 }
+
 td {
 	padding: 16px;
 	border: 1px solid #9370DB;
 }
+	td.wholeship {
+		background-color: rgba(255, 5, 51, .2);
+	}
+	td.wreckedship {
+		background-color: rgba(255, 5, 51);
+	}
+	td.miss {
+		background-color: rgba(55, 55, 51, .2);
+	}

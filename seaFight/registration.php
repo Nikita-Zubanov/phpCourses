@@ -2,68 +2,101 @@
 
 define("FIRST_PLAYER", 1);
 define("SECOND_PLAYER", 2);
+define("FIELD_SIZE", 10);
+
 class Registration
 {
-	private function writeToFile($field, $idPlayer) 
+	private function writeToFile($data, $fileName) 
 	{
-		$filename = $idPlayer;
-		$data = json_encode($field);  
-		file_put_contents($filename, $data);
-	}
+		$dataFile = json_encode($data);  
+		file_put_contents($fileName, $dataFile);
+	}	
 
+	private $error;
 	private $ships = [
 			'singleDeck' => ['counter' => 0, 'location' => array()],
 			'doubleDeck' => ['counter' => 0, 'location' => array()],
 			'threeDeck' => ['counter' => 0, 'location' => array()],
 			'fourDeck' => ['counter' => 0, 'location' => array()],
 	];
-	private function setLocation($locationShip)
+	private function setShipsLocationAndCount($shipsLocation, $shipsCount)
 	{
-		switch (count($locationShip)) {
-			case 0:
-				break;
-			case 1:
-				$this->ships['singleDeck']['location'] = array_merge($this->ships['singleDeck']['location'], $locationShip);
-				break;
-			case 2:
-				$this->ships['doubleDeck']['location'] = array_merge($this->ships['doubleDeck']['location'], $locationShip);
-				break;
-			case 3:
-				$this->ships['threeDeck']['location'] = array_merge($this->ships['threeDeck']['location'], $locationShip);
-				break;
-			case 4:
-				$this->ships['fourDeck']['location'] = array_merge($this->ships['fourDeck']['location'], $locationShip);
-				break;
+		if (!empty($shipsLocation)) {
+			switch (count($shipsLocation)) {
+				case 0:
+					break;
+				case 1:
+					$this->ships['singleDeck']['location'] = array_merge($this->ships['singleDeck']['location'], $shipsLocation);
+					break;
+				case 2:
+					$this->ships['doubleDeck']['location'] = array_merge($this->ships['doubleDeck']['location'], $shipsLocation);
+					break;
+				case 3:
+					$this->ships['threeDeck']['location'] = array_merge($this->ships['threeDeck']['location'], $shipsLocation);
+					break;
+				case 4:
+					$this->ships['fourDeck']['location'] = array_merge($this->ships['fourDeck']['location'], $shipsLocation);
+					break;
+			}
+		} elseif (!empty($shipsCount)) {
+			switch ($shipsCount) {
+				case '0':
+					break;
+				case '1':
+					$this->ships['singleDeck']['counter']++;
+					break;
+				case '2':
+					$this->ships['doubleDeck']['counter']++;
+					break;
+				case '3':
+					$this->ships['threeDeck']['counter']++;
+					break;
+				case '4':
+					$this->ships['fourDeck']['counter']++;
+					break;
+				default:
+					$this->error .= "Один из кораблей слишком большой! ";
+			}
 		}
 	}
-	public function getShipsLocations($field)
+	public function getShipsLocationAndCount($field)
 	{
 		foreach ($field as $rowKey => $row) {
 			foreach ($row as $symbolKey => $symbol) {
 				$locationShip = array();
-
-				if (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey])) {
+				$counter = 0;
+				
+				if (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey]) && 
+					$field[$rowKey][$symbolKey] != "0" && $field[$rowKey][$symbolKey] != "1") {
 					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву по вертикали
 						if (!empty($field[$i][$symbolKey])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
+							$counter++;
+
 							$field[$i][$symbolKey] = null;
 						} else break;
 					}
 
-					$this->setLocation($locationShip);
+					$this->setShipsLocationAndCount($locationShip, null);
 
-				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey][$symbolKey + 1])) {
+				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey][$symbolKey + 1]) && 
+							$field[$rowKey][$symbolKey] != "0" && $field[$rowKey][$symbolKey] != "1") {
 					for ($i = $symbolKey; $i <= count($row); $i++) { //Пробегаемся по массиву по горизонтали
 						if (!empty($field[$rowKey][$i])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
+							$counter++;
+
 							$field[$rowKey][$i] = null;
 						} else break;
 					}
 
-					$this->setLocation($locationShip);
+					$this->setShipsLocationAndCount($locationShip, null);
 
-				} elseif (!empty($field[$rowKey][$symbolKey])) { //Проверяем текущую ячейку
-					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву по вертикали для 1
+				} elseif (!empty($field[$rowKey][$symbolKey]) && $field[$rowKey][$symbolKey] != "0" && 
+							$field[$rowKey][$symbolKey] != "1") { //Проверяем текущую ячейку
+					$counter++;
+
+					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву по вертикали для 1 корабля
 						if (!empty($field[$i][$symbolKey])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
 							$field[$i][$symbolKey] = null;
@@ -75,72 +108,32 @@ class Registration
 						} else break;
 					}
 
-					$this->setLocation($locationShip);
+					$this->setShipsLocationAndCount($locationShip, null);
 				}
+				
+				$this->setShipsLocationAndCount(null, $counter);
+				
 			}
 		}
-
 		return $this->ships;
 	}
 
-	private function getErrorShipPositioning ($field)
+	private function setErrorShipPositioning($field)
 	{
 		foreach ($field as $rowKey => $row) {
 			foreach ($row as $symbolKey => $symbol) {
-				if (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey + 1])) { return "Неправильное расположение кораблей! ";
-				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey - 1])) { return "Неправильное расположение кораблей! ";
+				if (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey + 1])) { $this->error .= "Неправильное расположение кораблей! ";
+				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey - 1])) { $this->error .= "Неправильное расположение кораблей! ";
 				}
 			}
 		}
-		return null;
 	}
 
-	private function getErrorShipsSize($field)
-	{		
-		foreach ($field as $rowKey => $row) {
-			foreach ($row as $symbolKey => $symbol) {
-				$counter = 0;
-				
-				if (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey])) {
-					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву по вертикали
-						if (!empty($field[$i][$symbolKey])) {
-							$counter++;
-							$field[$i][$symbolKey] = null;
-						} else break;
-					}
-				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey][$symbolKey + 1])) {
-					for ($i = $symbolKey; $i <= count($row); $i++) { //Пробегаемся по массиву по горизонтали
-						if (!empty($field[$rowKey][$i])) {
-							$counter++;
-							$field[$rowKey][$i] = null;
-						} else break;
-					}
-				} elseif (!empty($field[$rowKey][$symbolKey])) { //Проверяем текущую ячейку
-					$counter++;
-				}
-
-				switch ($counter) {
-					case '0':
-						break;
-					case '1':
-						$this->ships['singleDeck']['counter']++;
-						break;
-					case '2':
-						$this->ships['doubleDeck']['counter']++;
-						break;
-					case '3':
-						$this->ships['threeDeck']['counter']++;
-						break;
-					case '4':
-						$this->ships['fourDeck']['counter']++;
-						break;
-					default:
-						return "Один из кораблей слишком большой! ";
-				}
-			}
+	private function setErrorShipsSize($field)
+	{
+		if ($this->ships['singleDeck']['counter'] !== 4 || $this->ships['doubleDeck']['counter'] !== 3 || $this->ships['threeDeck']['counter'] !== 2 || $this->ships['fourDeck']['counter'] !== 1) {
+			$this->error .= "Проверьте количество кораблей и их расстановку! ";
 		}
-		if ($this->ships['singleDeck']['counter'] !== 4 || $this->ships['doubleDeck']['counter'] !== 3 || $this->ships['threeDeck']['counter'] !== 2 || $this->ships['fourDeck']['counter'] !== 1) return "Проверьте количество кораблей и их расстановку! ";
-		return null;
 	}
 
 	private $fieldPlayers = [
@@ -177,7 +170,7 @@ class Registration
 
 		$idPlayer = $this->getIdPlayer();
 
-		for ($i = 0; $i < 11; $i++) {
+		for ($i = 0; $i < FIELD_SIZE + 1; $i++) {
 			$playerForm .= "<tr>";
 			$playerForm .= "<th>{$i}</th>";
 			foreach ($coordinates as $key => $value) {
@@ -193,17 +186,17 @@ class Registration
 			$playerForm .= "</tr>";
 		}
 
-		if (empty($this->getErrorShipPositioning($this->fieldPlayers[$idPlayer])) && 
-			empty($this->getErrorShipsSize($this->fieldPlayers[$idPlayer]))) {
+		$this->getShipsLocationAndCount($this->fieldPlayers[$idPlayer]);
+		$this->setErrorShipPositioning($this->fieldPlayers[$idPlayer]);
+		$this->setErrorShipsSize($this->fieldPlayers[$idPlayer]);
+
+		if (empty($this->error)) {
 			$this->writeToFile($this->fieldPlayers[$idPlayer], $idPlayer);
 		} else {
-			$playerForm .= $this->getErrorShipPositioning($this->fieldPlayers[$idPlayer])
-						 . $this->getErrorShipsSize($this->fieldPlayers[$idPlayer]);
+			$playerForm .= $this->error;
 		}
 		
 		$playerForm .= '<p><input type="submit" name="savePlayer" value="Сохранить поле игроков"></p>';
-
-		$this->getShipsLocations($this->fieldPlayers[$idPlayer]);
 
 		return $playerForm;
 	}
