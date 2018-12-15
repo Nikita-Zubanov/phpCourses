@@ -2,22 +2,16 @@
 
 define("FIRST_PLAYER", 1);
 define("SECOND_PLAYER", 2);
-define("FIELD_SIZE", 10);
+define("VERTICAL_FIELD_SIZE", 10);
 
 class Registration
 {
-	private function writeToFile($data, $fileName) 
-	{
-		$dataFile = json_encode($data);  
-		file_put_contents($fileName, $dataFile);
-	}	
-
 	private $error;
 	private $ships = [
-			'singleDeck' => ['counter' => 0, 'location' => array()],
-			'doubleDeck' => ['counter' => 0, 'location' => array()],
-			'threeDeck' => ['counter' => 0, 'location' => array()],
-			'fourDeck' => ['counter' => 0, 'location' => array()],
+			'singleDeck' => ['shipCount' => 0, 'location' => array()],
+			'doubleDeck' => ['shipCount' => 0, 'location' => array()],
+			'threeDeck' => ['shipCount' => 0, 'location' => array()],
+			'fourDeck' => ['shipCount' => 0, 'location' => array()],
 	];
 	private function setShipsLocationAndCount($shipsLocation, $shipsCount)
 	{
@@ -43,16 +37,16 @@ class Registration
 				case '0':
 					break;
 				case '1':
-					$this->ships['singleDeck']['counter']++;
+					$this->ships['singleDeck']['shipCount']++;
 					break;
 				case '2':
-					$this->ships['doubleDeck']['counter']++;
+					$this->ships['doubleDeck']['shipCount']++;
 					break;
 				case '3':
-					$this->ships['threeDeck']['counter']++;
+					$this->ships['threeDeck']['shipCount']++;
 					break;
 				case '4':
-					$this->ships['fourDeck']['counter']++;
+					$this->ships['fourDeck']['shipCount']++;
 					break;
 				default:
 					$this->error .= "Один из кораблей слишком большой! ";
@@ -64,14 +58,14 @@ class Registration
 		foreach ($field as $rowKey => $row) {
 			foreach ($row as $symbolKey => $symbol) {
 				$locationShip = array();
-				$counter = 0;
+				$shipCount = 0;
 				
 				if (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey + 1][$symbolKey]) && 
 					$field[$rowKey][$symbolKey] != "0" && $field[$rowKey][$symbolKey] != "1") {
-					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву по вертикали
+					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву поля по вертикали
 						if (!empty($field[$i][$symbolKey])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
-							$counter++;
+							$shipCount++;
 
 							$field[$i][$symbolKey] = null;
 						} else break;
@@ -81,10 +75,10 @@ class Registration
 
 				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey][$symbolKey + 1]) && 
 							$field[$rowKey][$symbolKey] != "0" && $field[$rowKey][$symbolKey] != "1") {
-					for ($i = $symbolKey; $i <= count($row); $i++) { //Пробегаемся по массиву по горизонтали
+					for ($i = $symbolKey; $i <= count($row); $i++) { //Пробегаемся по массиву поля по горизонтали
 						if (!empty($field[$rowKey][$i])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
-							$counter++;
+							$shipCount++;
 
 							$field[$rowKey][$i] = null;
 						} else break;
@@ -93,10 +87,10 @@ class Registration
 					$this->setShipsLocationAndCount($locationShip, null);
 
 				} elseif (!empty($field[$rowKey][$symbolKey]) && $field[$rowKey][$symbolKey] != "0" && 
-							$field[$rowKey][$symbolKey] != "1") { //Проверяем текущую ячейку
-					$counter++;
+							$field[$rowKey][$symbolKey] != "1") { //Проверяем текущую ячейку поля
+					$shipCount++;
 
-					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву по вертикали для 1 корабля
+					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву поля по вертикали и горизонтали для однопалубного корабля
 						if (!empty($field[$i][$symbolKey])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
 							$field[$i][$symbolKey] = null;
@@ -111,8 +105,7 @@ class Registration
 					$this->setShipsLocationAndCount($locationShip, null);
 				}
 				
-				$this->setShipsLocationAndCount(null, $counter);
-				
+				$this->setShipsLocationAndCount(null, $shipCount);
 			}
 		}
 		return $this->ships;
@@ -131,7 +124,7 @@ class Registration
 
 	private function setErrorShipsSize($field)
 	{
-		if ($this->ships['singleDeck']['counter'] !== 4 || $this->ships['doubleDeck']['counter'] !== 3 || $this->ships['threeDeck']['counter'] !== 2 || $this->ships['fourDeck']['counter'] !== 1) {
+		if ($this->ships['singleDeck']['shipCount'] !== 4 || $this->ships['doubleDeck']['shipCount'] !== 3 || $this->ships['threeDeck']['shipCount'] !== 2 || $this->ships['fourDeck']['shipCount'] !== 1) {
 			$this->error .= "Проверьте количество кораблей и их расстановку! ";
 		}
 	}
@@ -152,52 +145,66 @@ class Registration
 
 	private function getIdPlayer()
 	{
+		$game = new game();
+
 		if (!empty($_POST['loginFirst'])) {
 			$idPlayer = FIRST_PLAYER;
 		} elseif (!empty($_POST['loginSecond'])) {
 			$idPlayer = SECOND_PLAYER;
+			
+			$game->setGameStatus(STATUS_GAME_BEGUN);
 		}
 
 		return $idPlayer;
 	}
 
-	public function getFieldPlayer() 
+	private $playerForm;
+	private function setFieldPlayer($idPlayer) 
 	{
+		$this->playerForm .= '<p><lable>Логин первого игрока: </lable ><input type = "text" name = "loginFirst"></p>';
+		$this->playerForm .= '<p><lable>Логин второго игрока: </lable ><input type = "text" name = "loginSecond"></p>';
+
 		$coordinates = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
-
-		$playerForm .= '<p><lable>Логин первого игрока: </lable ><input type = "text" name = "loginFirst"></p>';
-		$playerForm .= '<p><lable>Логин второго игрока: </lable ><input type = "text" name = "loginSecond"></p>';
-
-		$idPlayer = $this->getIdPlayer();
-
-		for ($i = 0; $i < FIELD_SIZE + 1; $i++) {
-			$playerForm .= "<tr>";
-			$playerForm .= "<th>{$i}</th>";
+		for ($y = 0; $y < VERTICAL_FIELD_SIZE + 1; $y++) {
+			$this->playerForm .= "<tr>";
+			$this->playerForm .= "<th>{$y}</th>";
 			foreach ($coordinates as $key => $value) {
-				if ($i === 0) {
-					$playerForm .= "<th>{$value}</th>";
+				if ($y === 0) {
+					$this->playerForm .= "<th>{$value}</th>";
 
 					$this->setLoginPlayer($idPlayer);
 				} else {
-					$playerForm .= '<td><input type="checkbox" name="' . $i . $value . '" value="' . $i . $value . '"></td>';
-					array_push($this->fieldPlayers[$idPlayer][$i], $_POST[$i . $value]);
+					$this->playerForm .= '<td><input type="checkbox" name="' . $y . $value . '" value="' . $y . $value . '"></td>';
+					array_push($this->fieldPlayers[$idPlayer][$y], $_POST[$y . $value]);
 				}
 			}
-			$playerForm .= "</tr>";
+			$this->playerForm .= "</tr>";
 		}
 
-		$this->getShipsLocationAndCount($this->fieldPlayers[$idPlayer]);
-		$this->setErrorShipPositioning($this->fieldPlayers[$idPlayer]);
-		$this->setErrorShipsSize($this->fieldPlayers[$idPlayer]);
+		$this->playerForm .= '<p><input type="submit" name="savePlayer" value="Сохранить поле игрока"></p>';
+	}
 
-		if (empty($this->error)) {
-			$this->writeToFile($this->fieldPlayers[$idPlayer], $idPlayer);
+	public function getRegistrationGame()
+	{
+		$game = new game();
+
+		$idPlayer = $this->getIdPlayer();
+		$this->setFieldPlayer($idPlayer);
+
+		if(!empty($_POST['loginFirst']) || !empty($_POST['loginSecond'])) {
+			$this->getShipsLocationAndCount($this->fieldPlayers[$idPlayer]);
+			$this->setErrorShipPositioning($this->fieldPlayers[$idPlayer]);
+			$this->setErrorShipsSize($this->fieldPlayers[$idPlayer]);
+
+			if (empty($this->error)) {
+				$game->writeToFile($this->fieldPlayers[$idPlayer], $idPlayer);
+			} else {
+				$this->playerForm .= $this->error;
+			}
 		} else {
-			$playerForm .= $this->error;
+			$this->playerForm .= "Расставьте корабли!";
 		}
-		
-		$playerForm .= '<p><input type="submit" name="savePlayer" value="Сохранить поле игроков"></p>';
 
-		return $playerForm;
+		return $this->playerForm;
 	}
 }

@@ -1,25 +1,31 @@
 <?php 	
 
-include 'view.php';
-include 'registration.php';
-
 class Controller
 {
-	private $html;
-	private $registration;
-	public function __construct()
+	public function getGameStatus()
 	{
-		$this->html = new View();
-		$this->registration = new Registration();
+		$game = new game();
+
+		return $game->readToFile(GAME_STATUS_NAME_FILE);
 	}
 
-	public function getBattlefield()
+	public function setBattlefield()
 	{
-		return $this->html->getHtmlRegistrationForm($this->registration->getFieldPlayer());
+		$html = new view();
+		$registration = new registration();
+
+		if ($this->getGameStatus() === STATUS_GAME_OVER) {	
+			$playerRegistrationForm = $registration->getRegistrationGame();
+			echo $html->getHtmlRegistrationForm($playerRegistrationForm);
+		}
 	}
 
-	public function getHtmlStartedGame()
+	public function setStartedGame()
 	{
-		return $this->html->getHtmlStartedGame();
+		$game = new game();
+
+		if ($this->getGameStatus() === STATUS_GAME_BEGUN) {
+			$game->setStartedGame();
+		}
 	}
 }
