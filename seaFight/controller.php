@@ -2,11 +2,11 @@
 
 class Controller
 {
-	public function getGameStatus()
+	private function getGameStatus()
 	{
 		$game = new game();
 
-		return $game->readToFile(GAME_STATUS_NAME_FILE);
+		return $game->readToFile(game::GAME_STATUS_NAME_FILE);
 	}
 
 	public function setBattlefield()
@@ -14,7 +14,7 @@ class Controller
 		$html = new view();
 		$registration = new registration();
 
-		if ($this->getGameStatus() === STATUS_GAME_OVER) {	
+		if ($this->getGameStatus() === game::STATUS_GAME_OVER) {	
 			$playerRegistrationForm = $registration->getRegistrationGame();
 			echo $html->getHtmlRegistrationForm($playerRegistrationForm);
 		}
@@ -24,7 +24,7 @@ class Controller
 	{
 		$game = new game();
 
-		if ($this->getGameStatus() === STATUS_GAME_BEGUN) {
+		if ($this->getGameStatus() === game::STATUS_GAME_BEGUN) {
 			$game->setStartedGame();
 		}
 	}

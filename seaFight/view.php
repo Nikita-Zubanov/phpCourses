@@ -35,12 +35,4 @@ class View
 	{
 		return $this->getHtmlFormFirst() . $playerRegistrationForm . $this->getHtmlFormSecond();
 	}
-
-	private $htmlStartedGame;
-	public function getHtmlStartedGame()
-	{
-		$this->htmlStartedGame = '<p><a href="game.php">Начать игру</a></p>';
-		//$this->htmlStartedGame = '<META HTTP-EQUIV=Refresh Content="0;URL=game.php">';
-		return $this->htmlStartedGame;
-	}
 }
