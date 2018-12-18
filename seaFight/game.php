@@ -35,30 +35,15 @@ class Game
 		echo '<META HTTP-EQUIV=Refresh Content="0;">';
 	}
 
-	private $winner;
 	private $playerMove;
-	private function getWinner($fieldPlayer, $ships)
+	private function setPlayingFormPlayers($idPlayer)
 	{
 		$field = new field();
+		$html = new view();
 
-		if ($this->playerMove === field::FIRST_PLAYER) {
-			$idEnemyPlayer = field::SECOND_PLAYER;
-		} else {
-			$idEnemyPlayer = field::FIRST_PLAYER;
-		}
-
-		$ships = $field->getShipsLocationAndCount($fieldPlayer[$idEnemyPlayer]);
-
-		$numberSurvivingShips;
-		foreach ($ships as $deckKey => $deck) {
-			$numberSurvivingShips += $ships[$deckKey]['shipCount'];
-		}
-		if ($numberSurvivingShips === 0) {
-			$this->winner = $this->playerMove;
-			$this->setGameStatus(self::STATUS_GAME_OVER);
-		}
-
-		return $this->winner;
+		echo $html->getHtmlFormFirst();
+		echo $field->getPlayingFormPlayer($idPlayer, $this->playerMove);
+		echo $html->getHtmlFormSecond();
 	}
 
 	public function setStartedGame()
@@ -67,21 +52,22 @@ class Game
 
 		$this->playerMove = (int) $this->readToFile(self::PLAYER_MOVE_NAME_FILE);
 
-		echo $field->getPlayingFieldPlayer(field::FIRST_PLAYER, $this->playerMove);
-		echo $field->getPlayingFieldPlayer(field::SECOND_PLAYER, $this->playerMove);
+		$this->setPlayingFormPlayers(field::FIRST_PLAYER);
+		$this->setPlayingFormPlayers(field::SECOND_PLAYER);
 
-		if (empty($this->getWinner($field->fieldPlayers, $field->ships))) {
+		if (empty($field->getNameWinner($this->playerMove))) {
 			if(isset($_POST['attack'])) {
 				$this->setStepPlayer($this->playerMove);
 				$this->setGameStatus(self::STATUS_GAME_BEGUN);
 			}
 		} else {
-			$nameWinner = $field->fieldPlayers[$this->winner]['login'];
+			$nameWinner = $field->getNameWinner($this->playerMove);
+
 			$this->writeToFile(null, self::WINNER_NAME_FILE);				//Задаем изначальные значения файлам, где хранится информация об игре
 			$this->writeToFile(field::FIRST_PLAYER, self::PLAYER_MOVE_NAME_FILE);
 			$this->writeToFile(null, field::FIRST_PLAYER);
 			$this->writeToFile(null, field::SECOND_PLAYER);
-
+			
 			echo "<script>alert(\"Победил игрок $nameWinner\");</script>";
 		}
 	}

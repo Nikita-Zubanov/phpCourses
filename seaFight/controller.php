@@ -15,7 +15,7 @@ class Controller
 		$registration = new registration();
 
 		if ($this->getGameStatus() === game::STATUS_GAME_OVER) {	
-			$playerRegistrationForm = $registration->getRegistrationGame();
+			$playerRegistrationForm = $registration->getRegistrationFormGame();
 			echo $html->getHtmlRegistrationForm($playerRegistrationForm);
 		}
 	}

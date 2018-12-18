@@ -9,19 +9,10 @@ class Field
 	const SECOND_PLAYER = 2;
 	const VERTICAL_FIELD_SIZE = 10;
 
-	public $fieldPlayers = [
+	private $fieldPlayers = [
 		self::FIRST_PLAYER => ['login' => '', '1' => array(), '2' => array(), '3' => array(), '4' => array(), '5' => array(), '6' => array(), '7' => array(), '8' => array(), '9' => array(), '10' => array()],
 		self::SECOND_PLAYER => ['login' => '', '1' => array(), '2' => array(), '3' => array(), '4' => array(), '5' => array(), '6' => array(), '7' => array(), '8' => array(), '9' => array(), '10' => array()],
 	];
-
-	public function setRegistrationLoginPlayer($idPlayer)
-	{
-		if ($idPlayer === self::FIRST_PLAYER) {
-			$this->fieldPlayers[$idPlayer]['login'] = $_POST['loginFirst'];
-		} elseif ($idPlayer === self::SECOND_PLAYER) {
-			$this->fieldPlayers[$idPlayer]['login'] = $_POST['loginSecond'];
-		}
-	}
 
 	public function getRegistrationIdPlayer()
 	{
@@ -34,12 +25,40 @@ class Field
 			
 			$game->setGameStatus(game::STATUS_GAME_BEGUN);
 		}
-
 		return $idPlayer;
 	}
 
-	public $playerRegistrationForm;
-	public function setRegistrationFieldPlayer($idPlayer) 
+	private function setRegistrationLoginPlayer($idPlayer)
+	{
+		if ($idPlayer === self::FIRST_PLAYER) {
+			$this->fieldPlayers[$idPlayer]['login'] = $_POST['loginFirst'];
+		} elseif ($idPlayer === self::SECOND_PLAYER) {
+			$this->fieldPlayers[$idPlayer]['login'] = $_POST['loginSecond'];
+		}
+	}
+
+	private $playerRegistrationForm;
+	public function getRegistrationFieldPlayer($idPlayer) 
+	{
+		for ($y = 0; $y < self::VERTICAL_FIELD_SIZE + 1; $y++) {
+			foreach (self::COORDINATES as $key => $value) {
+				if ($y === 0) {
+					$this->setRegistrationLoginPlayer($idPlayer);
+				} else {
+					array_push($this->fieldPlayers[$idPlayer][$y], $_POST[$y . $value]);
+				}
+			}
+		}
+
+		return $this->fieldPlayers[$idPlayer];
+	}
+
+	public function setRegistrationFormPlayer($data) 
+	{
+		$this->playerRegistrationForm .= $data;
+	}
+
+	public function getRegistrationFormPlayer() 
 	{
 		$this->playerRegistrationForm .= '<p><lable>Логин первого игрока: </lable ><input type = "text" name = "loginFirst"></p>';
 		$this->playerRegistrationForm .= '<p><lable>Логин второго игрока: </lable ><input type = "text" name = "loginSecond"></p>';
@@ -50,7 +69,6 @@ class Field
 			foreach (self::COORDINATES as $key => $value) {
 				if ($y === 0) {
 					$this->playerRegistrationForm .= "<th>{$value}</th>";
-
 					$this->setRegistrationLoginPlayer($idPlayer);
 				} else {
 					$this->playerRegistrationForm .= '<td><input type="checkbox" name="' . $y . $value . '" value="' . $y . $value . '"></td>';
@@ -61,10 +79,12 @@ class Field
 		}
 
 		$this->playerRegistrationForm .= '<p><input type="submit" name="savePlayer" value="Сохранить поле игрока"></p>';
+
+		return $this->playerRegistrationForm;
 	}
 
-	public $error;
-	public $ships = [
+	private $error;
+	private $ships = [
 			'singleDeck' => ['shipCount' => 0, 'location' => array()],
 			'doubleDeck' => ['shipCount' => 0, 'location' => array()],
 			'threeDeck' => ['shipCount' => 0, 'location' => array()],
@@ -124,13 +144,10 @@ class Field
 						if (!empty($field[$i][$symbolKey])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
 							$shipCount++;
-
 							$field[$i][$symbolKey] = null;
 						} else break;
 					}
-
 					$this->setShipsLocationAndCount($locationShip, null);
-
 				} elseif (!empty($field[$rowKey][$symbolKey]) && !empty($field[$rowKey][$symbolKey + 1]) && 
 							$field[$rowKey][$symbolKey] != self::MISS && $field[$rowKey][$symbolKey] != 
 							self::WRECKED_SHIP) {
@@ -138,29 +155,23 @@ class Field
 						if (!empty($field[$rowKey][$i])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
 							$shipCount++;
-
 							$field[$rowKey][$i] = null;
 						} else break;
 					}
-
 					$this->setShipsLocationAndCount($locationShip, null);
-
 				} elseif (!empty($field[$rowKey][$symbolKey]) && $field[$rowKey][$symbolKey] != self::MISS 
 					&& $field[$rowKey][$symbolKey] != self::WRECKED_SHIP) { //Проверяем текущую ячейку поля
 					$shipCount++;
-
 					for ($i = $rowKey; $i <= count($field); $i++) { //Пробегаемся по массиву поля по вертикали и горизонтали для однопалубного корабля
 						if (!empty($field[$i][$symbolKey])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
 							$field[$i][$symbolKey] = null;
 						} else break;
-
 						if (!empty($field[$rowKey][$i])) {
 							$locationShip[$i] = $i . substr($symbol, -2);
 							$field[$rowKey][$i] = null;
 						} else break;
 					}
-
 					$this->setShipsLocationAndCount($locationShip, null);
 				}
 				
@@ -170,7 +181,7 @@ class Field
 		return $this->ships;
 	}
 
-	public function setErrorShipPositioning($field)	//Идут две функции проверки поля игрока
+	private function setErrorPositioningShips($field)	//Идут две функции проверки поля игрока
 	{
 		foreach ($field as $rowKey => $row) {
 			foreach ($row as $symbolKey => $symbol) {
@@ -181,47 +192,56 @@ class Field
 		}
 	}
 
-	public function setErrorShipsSize($field, $ships)
+	private function setErrorNumberShips($ships)
 	{
 		if ($ships['singleDeck']['shipCount'] !== 4 || $ships['doubleDeck']['shipCount'] !== 3 || $ships['threeDeck']['shipCount'] !== 2 || $ships['fourDeck']['shipCount'] !== 1) {
 			$this->error .= "Проверьте количество кораблей и их расстановку! ";
 		}
 	}
 
-	public function getPlayingFieldPlayer($idPlayer, $playerMove) 
+	public function getError($fieldPlayer)
 	{
-		$html = new view();
+		$shipsPlayer = $this->getShipsLocationAndCount($fieldPlayer);
+
+		$this->setErrorPositioningShips($fieldPlayer);
+		$this->setErrorNumberShips($shipsPlayer);
+
+		return $this->error;
+	}
+
+	public function getPlayingFormPlayer($idPlayer, $playerMove) 
+	{
 		$game = new game();
 
 		$this->fieldPlayers[$idPlayer] = (array) $game->readToFile($idPlayer);
 
-		$playerForm .= $html->getHtmlFormFirst();
-		$playerForm .= "<caption>" . $this->fieldPlayers[$idPlayer]['login'] . "</caption>";
+		$playerGameplayForm .= "<caption>" . $this->fieldPlayers[$idPlayer]['login'] . "</caption>";
 
 		for ($y = 0; $y < self::VERTICAL_FIELD_SIZE + 1; $y++) {
-			$playerForm .= "<tr>";
-			$playerForm .= "<th>{$y}</th>";
+			$playerGameplayForm .= "<tr>";
+			$playerGameplayForm .= "<th>{$y}</th>";
 			foreach (self::COORDINATES as $key => $value) {
 				if ($y === 0) {
-					$playerForm .= "<th>{$value}</th>";
+					$playerGameplayForm .= "<th>{$value}</th>";
 				} else {
 					if ($this->fieldPlayers[$idPlayer][$y][$key] === self::WRECKED_SHIP) {
-						$playerForm .= '<td class="wreckedship"></td>';
+						$playerGameplayForm .= '<td class="wreckedship"></td>';
 					} elseif ($this->fieldPlayers[$idPlayer][$y][$key] === self::MISS) {
-						$playerForm .= '<td class="miss"></td>';
+						$playerGameplayForm .= '<td class="miss"></td>';
 					} elseif (!empty($this->fieldPlayers[$idPlayer][$y][$key])) {
-						$playerForm .= '<td class="wholeShip"></td>';
+						$playerGameplayForm .= '<td class="wholeShip"></td>';
 					} else {
-						$playerForm .= '<td></td>';
+						$playerGameplayForm .= '<td></td>';
 					}
 				}
 			}
-			$playerForm .= "</tr>";
+			$playerGameplayForm .= "</tr>";
 		}
-		$playerForm .= '<p><lable>Ход '.$playerMove.' игрока: </lable ><input type = "text" name = "' . $idPlayer . '"></p>';
-		$playerForm .= '<p><input type="submit" name="attack" value="Атаковать" class="submit"></p>';
-		$playerForm .= $html->getHtmlFormSecond();
-		return $playerForm;
+
+		$playerGameplayForm .= '<p><lable>Ход '.$playerMove.' игрока: </lable ><input type = "text" name = "' . $idPlayer . '"></p>';
+		$playerGameplayForm .= '<p><input type="submit" name="attack" value="Атаковать" class="submit"></p>';
+
+		return $playerGameplayForm;
 	}
 
 	public function setPlayingFieldPlayer($idPlayer, $stepPlayer)
@@ -235,6 +255,7 @@ class Field
 		}
 
 		$this->fieldPlayers[$idEnemyPlayer] = (array) $game->readToFile($idEnemyPlayer);
+
 		$wasItHit = false;
 		for ($y = 1; $y < self::VERTICAL_FIELD_SIZE + 1; $y++) {
 			foreach (self::COORDINATES as $key => $value) {
@@ -252,10 +273,48 @@ class Field
 
 		if (!$wasItHit) {
 			$game->writeToFile($idEnemyPlayer, game::PLAYER_MOVE_NAME_FILE);
+
 			$x = (int) array_search(substr($stepPlayer, -2), self::COORDINATES);
 			$y = (int) substr($stepPlayer, 0, 1);
+
 			$this->fieldPlayers[$idEnemyPlayer][$y][$x] = self::MISS;
 		}
+
 		$game->writeToFile($this->fieldPlayers[$idEnemyPlayer], $idEnemyPlayer);
+	}
+
+	private function getPlayingFieldPlayer($idPlayer) 
+	{
+		$game = new game();
+
+		$this->fieldPlayers[$idPlayer] = (array) $game->readToFile($idPlayer);
+
+		return $this->fieldPlayers[$idPlayer];
+	}
+
+	public function getNameWinner($playerMove)
+	{
+		$game = new game();
+
+		if ($playerMove === self::FIRST_PLAYER) {
+			$idEnemyPlayer = self::SECOND_PLAYER;
+		} else {
+			$idEnemyPlayer = self::FIRST_PLAYER;
+		}
+		$fieldEnemyPlayer = $this->getPlayingFieldPlayer($idEnemyPlayer);
+		$ships = $this->getShipsLocationAndCount($fieldEnemyPlayer);
+
+		$numberSurvivingShips;
+		foreach ($ships as $deckKey => $deck) {
+			$numberSurvivingShips += $ships[$deckKey]['shipCount'];
+		}
+
+		if ($numberSurvivingShips === 0) {
+			$fieldPlayer = $this->getPlayingFieldPlayer($playerMove);
+			$winnerName = $fieldPlayer['login'];
+
+			$game->setGameStatus(game::STATUS_GAME_OVER);
+		}
+		return $winnerName;
 	}
 }

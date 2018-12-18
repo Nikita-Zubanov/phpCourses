@@ -2,28 +2,25 @@
 
 class Registration
 {
-	public function getRegistrationGame()
+	public function getRegistrationFormGame()
 	{
 		$game = new game();
 		$field = new field();
 
 		$idPlayer = $field->getRegistrationIdPlayer();
-		$field->setRegistrationFieldPlayer($idPlayer);
+		$fieldPlayer = $field->getRegistrationFieldPlayer($idPlayer);
+		$error = $field->getError($fieldPlayer);
 
 		if(!empty($_POST['loginFirst']) || !empty($_POST['loginSecond'])) {
-			$field->getShipsLocationAndCount($field->fieldPlayers[$idPlayer]);
-			$field->setErrorShipPositioning($field->fieldPlayers[$idPlayer]);
-			$field->setErrorShipsSize($field->fieldPlayers[$idPlayer], $field->ships);
-			
-			if (empty($field->error)) {
-				$game->writeToFile($field->fieldPlayers[$idPlayer], $idPlayer);
+			if (empty($error)) {
+				$game->writeToFile($fieldPlayer, $idPlayer);
 			} else {
-				$field->playerRegistrationForm .= $field->error;
+				$field->setRegistrationFormPlayer($error);
 			}
 		} else {
-			$field->playerRegistrationForm .= "Расставьте корабли!";
+			$field->setRegistrationFormPlayer("Расставьте корабли!");
 		}
 
-		return $field->playerRegistrationForm;
+		return $field->getRegistrationFormPlayer();
 	}
 }
